@@ -70,7 +70,7 @@ POST /api/auth/register
   "firstName": "John",
   "lastName": "Doe",
   "email": "john@gmail.com",
-  "date": "2026-06-16",
+  "birthdate": "2026-06-16",
   "role": "USER"
 }
 ```

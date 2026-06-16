@@ -127,7 +127,6 @@ Content-Type: multipart/form-data
 
 | Key       | Type | Example   |
 |----------|------|-----------|
-| type     | Text | IN / OUT  |
 | latitude | Text | 14.5995   |
 | longitude| Text | 120.9842  |
 | picture  | File | selfie.jpg|

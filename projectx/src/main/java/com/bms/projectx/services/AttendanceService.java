@@ -15,8 +15,10 @@ import java.math.BigDecimal;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
+import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.util.List;
+import java.util.Optional;
 import java.util.UUID;
 
 @Service
@@ -43,32 +45,56 @@ public class AttendanceService {
         return attendanceRepository.findByUserId(userId);
     }
 
-    public AttendanceEntity save(
-            String type,
+    public AttendanceEntity punch(
             BigDecimal latitude,
             BigDecimal longitude,
             MultipartFile picture
     ) throws IOException {
 
+        // 1. Get logged-in user
         Authentication auth = SecurityContextHolder.getContext().getAuthentication();
-
         String email = auth.getName();
 
         UserEntity user = userRepository.findByEmail(email)
                 .orElseThrow(() -> new RuntimeException("User not found"));
 
-        String uploadDir = "uploads/attendance/";
+        // 2. Check today's latest attendance
+        LocalDate today = LocalDate.now();
+        LocalDateTime start = today.atStartOfDay();
+        LocalDateTime end = today.atTime(23, 59, 59);
 
-        File dir = new File(uploadDir);
-        if (!dir.exists()) {
-            dir.mkdirs();
+        Optional<AttendanceEntity> latest =
+                attendanceRepository.findTopByUserIdAndDateTimeBetweenOrderByDateTimeDesc(
+                        user.getId(),
+                        start,
+                        end
+                );
+
+        // 3. Decide IN or OUT
+        String type;
+
+        if (latest.isEmpty()) {
+            type = "IN";
+        } else {
+            AttendanceEntity last = latest.get();
+
+            if ("IN".equals(last.getType())) {
+                type = "OUT";
+            } else {
+                type = "IN";
+            }
         }
 
-        String fileName = UUID.randomUUID() + "_" + picture.getOriginalFilename();
+        // 4. Upload image
+        String uploadDir = "uploads/attendance/";
+        File dir = new File(uploadDir);
+        if (!dir.exists()) dir.mkdirs();
 
+        String fileName = UUID.randomUUID() + "_" + picture.getOriginalFilename();
         Path path = Paths.get(uploadDir, fileName);
         Files.copy(picture.getInputStream(), path);
 
+        // 5. Save attendance
         AttendanceEntity attendance = new AttendanceEntity();
         attendance.setUser(user);
         attendance.setDateTime(LocalDateTime.now());
@@ -78,6 +104,36 @@ public class AttendanceService {
         attendance.setPicture(uploadDir + fileName);
 
         return attendanceRepository.save(attendance);
+    }
+
+    public String getNextAction() {
+
+        Authentication auth = SecurityContextHolder.getContext().getAuthentication();
+        String email = auth.getName();
+
+        UserEntity user = userRepository.findByEmail(email)
+                .orElseThrow(() -> new RuntimeException("User not found"));
+
+        LocalDate today = LocalDate.now();
+        LocalDateTime start = today.atStartOfDay();
+        LocalDateTime end = today.atTime(23, 59, 59);
+
+        Optional<AttendanceEntity> latest =
+                attendanceRepository.findTopByUserIdAndDateTimeBetweenOrderByDateTimeDesc(
+                        user.getId(), start, end
+                );
+
+        if (latest.isEmpty()) {
+            return "IN";
+        }
+
+        AttendanceEntity last = latest.get();
+
+        if ("IN".equals(last.getType())) {
+            return "OUT";
+        }
+
+        return "IN";
     }
 
     public AttendanceEntity update(Long id, AttendanceEntity attendance) {

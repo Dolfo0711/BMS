@@ -10,6 +10,7 @@ import org.springframework.web.multipart.MultipartFile;
 import java.io.IOException;
 import java.math.BigDecimal;
 import java.util.List;
+import java.util.Map;
 
 @RestController
 @RequestMapping("/api/attendances")
@@ -39,18 +40,25 @@ public class AttendanceController {
             @PathVariable Long userId) {
         return ResponseEntity.ok(attendanceService.findByUserId(userId));
     }
+    @GetMapping("/status")
+    public ResponseEntity<?> getStatus() {
+
+        String nextAction = attendanceService.getNextAction();
+
+        return ResponseEntity.ok(
+                Map.of("nextAction", nextAction)
+        );
+    }
 
     // POST /api/attendances
     @PostMapping(consumes = "multipart/form-data")
     public ResponseEntity<AttendanceEntity> store(
-            @RequestParam String type,
             @RequestParam BigDecimal latitude,
             @RequestParam BigDecimal longitude,
             @RequestParam MultipartFile picture
     ) throws IOException {
 
-        AttendanceEntity created = attendanceService.save(
-                type,
+        AttendanceEntity created = attendanceService.punch(
                 latitude,
                 longitude,
                 picture
@@ -58,7 +66,6 @@ public class AttendanceController {
 
         return new ResponseEntity<>(created, HttpStatus.CREATED);
     }
-
     // PUT /api/attendances/{id}
     @PutMapping("/{id}")
     public ResponseEntity<AttendanceEntity> update(

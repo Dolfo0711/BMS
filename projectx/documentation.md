@@ -57,7 +57,7 @@ POST /api/auth/register
   "lastName": "Doe",
   "email": "john@gmail.com",
   "password": "123456",
-  "date": "2026-06-16",
+  "birthdate": "2026-06-16",
   "role": "USER"
 }
 ```

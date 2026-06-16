@@ -1,9 +1,7 @@
 package com.bms.projectx.entity;
 
 import jakarta.persistence.*;
-import lombok.AllArgsConstructor;
-import lombok.Data;
-import lombok.NoArgsConstructor;
+import lombok.*;
 
 @Entity
 @Table(name = "users")
@@ -17,12 +15,14 @@ public class UserEntity {
     private Long id;
 
     private String firstName;
-
     private String lastName;
 
+    @Column(unique = true)
     private String email;
+
+    private String password; // REQUIRED for Spring Security
 
     private String date;
 
-    private String role;
+    private String role; // ADMIN, USER
 }

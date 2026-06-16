@@ -22,7 +22,7 @@ public class UserEntity {
 
     private String password; // REQUIRED for Spring Security
 
-    private String date;
+    private String birthday;
 
     private String role; // ADMIN, USER
 }

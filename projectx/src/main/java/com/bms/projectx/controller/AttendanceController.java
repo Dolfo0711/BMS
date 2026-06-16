@@ -41,16 +41,15 @@ public class AttendanceController {
     }
 
     // POST /api/attendances
-    @PostMapping
+    @PostMapping(consumes = "multipart/form-data")
     public ResponseEntity<AttendanceEntity> store(
-            @RequestParam Long userId,
             @RequestParam String type,
             @RequestParam BigDecimal latitude,
             @RequestParam BigDecimal longitude,
-            @RequestParam MultipartFile picture) throws IOException {
+            @RequestParam MultipartFile picture
+    ) throws IOException {
 
         AttendanceEntity created = attendanceService.save(
-                userId,
                 type,
                 latitude,
                 longitude,

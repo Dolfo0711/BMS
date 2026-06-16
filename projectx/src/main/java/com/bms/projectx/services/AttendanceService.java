@@ -4,6 +4,8 @@ import com.bms.projectx.entity.AttendanceEntity;
 import com.bms.projectx.entity.UserEntity;
 import com.bms.projectx.repository.AttendanceRepository;
 import com.bms.projectx.repository.UserRepository;
+import org.springframework.security.core.Authentication;
+import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.stereotype.Service;
 import org.springframework.web.multipart.MultipartFile;
 
@@ -42,13 +44,17 @@ public class AttendanceService {
     }
 
     public AttendanceEntity save(
-            Long userId,
             String type,
             BigDecimal latitude,
             BigDecimal longitude,
-            MultipartFile picture) throws IOException {
+            MultipartFile picture
+    ) throws IOException {
 
-        UserEntity user = userRepository.findById(userId)
+        Authentication auth = SecurityContextHolder.getContext().getAuthentication();
+
+        String email = auth.getName();
+
+        UserEntity user = userRepository.findByEmail(email)
                 .orElseThrow(() -> new RuntimeException("User not found"));
 
         String uploadDir = "uploads/attendance/";
@@ -61,7 +67,6 @@ public class AttendanceService {
         String fileName = UUID.randomUUID() + "_" + picture.getOriginalFilename();
 
         Path path = Paths.get(uploadDir, fileName);
-
         Files.copy(picture.getInputStream(), path);
 
         AttendanceEntity attendance = new AttendanceEntity();
